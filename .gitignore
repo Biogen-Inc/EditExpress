@@ -1,0 +1,16 @@
+*.pyc
+*.conf
+*.sh
+*.text
+*.txt
+*.fastq
+old*
+pipeline_runs/
+scripts_1128/
+simulated_big_gap_fastqs/
+bad_fastqs_DMD/
+test*
+.nfs*
+*.swp
+DMD_exon51_zipped_fastqs/*
+*/*
