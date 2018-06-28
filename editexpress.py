@@ -141,7 +141,10 @@ def get_reference(ref_file):
         clean1 = [re.sub('\s+', '\t', line.rstrip()) for line in f]
         clean2 = [re.sub('\t+', '\t', line) for line in clean1]
         clean3 = [line.split('\t') for line in clean2]
-    
+   
+    if any([i for i in clean3 if len(i)!=max([len(i) for i in clean3])]): #one or more lines is of variable length
+        print('Incorrectly formatted reference sequence - variable row lengths')
+        sys.exit()
     y=len(clean3)
     x=len(clean3[0])
 
@@ -155,6 +158,7 @@ def get_reference(ref_file):
     amplicon=[]
     target=[]
     sgRNA=[]
+    print(clean3)
     for i in range(y-1):
         if len(primer_indices)==1: #only forward primer
             primer1_parse=clean3[i+1][primer_indices[0]]
@@ -411,7 +415,6 @@ if __name__ == '__main__':
         sample_name = re.sub(R1_suffix, '', os.path.basename(file_R1))
         sampleFilter=LogFilter()
         sampleFilter.sample_name=sample_name
-        #if min(n_processes, len(file_R1R2), mp.cpu_count())>1:
         if file_R1R2[len(file_R1R2)-1]: #a value of True or False indicating multiprocessing
             mpLogger = logging.getLogger()
             mpLogger.addFilter(sampleFilter)
@@ -508,7 +511,7 @@ if __name__ == '__main__':
                         log.readout('Finished calling mutations')
                     except IOError:
                         logging.critical('bamfile missing!: ' + bam) 
-                        sys.exit()
+                        return
                 elif workflow=='standard':
                     try:
                         from parse_needle_alignment import setup_mut_caller,get_mut_parser_params, single_sample_mut_parser, parse_cigar, filter_reads, get_seq, get_frame, setup_restrict, parse_restrict_alignment 
@@ -525,7 +528,7 @@ if __name__ == '__main__':
                         log.readout('Finished calling mutations')
                     except IOError:
                         logging.critical('bamfile missing!: ' + bam) #this will happen if mutation calling is run separate from alignment, but the bams are missing
-                        sys.exit()
+                        return
                     log.info('Building alignment plot...')
                     from build_plot_svg import visualize, parse_sample, parse_mut, setup_alignment_plot, pre_alignment_plot
                     zero_site, seq_range, ref_lines, default = setup_alignment_plot(parser_dict, amplicon_fasta, coords, ref_num, sgRNA, log)
@@ -772,6 +775,8 @@ if __name__ == '__main__':
         ref_file = parser_dict['reference_files']['amplicon_reference']
         try:
             target, primer1, primer2, amplicon, sgRNA, n_ref = get_reference(ref_file)
+            #if not paired_end:
+            #    primer2=['' for i in primer2] #probably can't guarantee that that primer2 should always be empty, i.e. if they were using pre-merged fastqs
         except IOError:
             logging.error(ref_file + ' not found!')
             sys.exit()

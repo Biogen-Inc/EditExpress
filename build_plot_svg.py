@@ -267,29 +267,32 @@ def pre_alignment_plot(out_dir, in_file, in_file_type, parser_dict, seq_range, d
     ref_lines_sub = ref_lines[seq_range[0]:seq_range[1]]
     mut_list=[]
     cov_range_len = []
-    for i in ordered_track:
-        mut,seq= i[0].split('\t')
-        mut=mut.rstrip()
-        seq=seq.rstrip()
-        if in_file_type == 'topSeqs':
-            if mut_range[i[0]][1]==mut_range[i[0]][0]:
-                cov_range = mut_range[i[0]][0]
+    if len(ordered_track)>0:
+        for i in ordered_track:
+            mut,seq= i[0].split('\t')
+            mut=mut.rstrip()
+            seq=seq.rstrip()
+            if in_file_type == 'topSeqs':
+                if mut_range[i[0]][1]==mut_range[i[0]][0]:
+                    cov_range = mut_range[i[0]][0]
+                else:
+                    cov_range = "-".join(mut_range[i[0]])
+                cov_range_len.append(len(cov_range))
             else:
-                cov_range = "-".join(mut_range[i[0]])
-            cov_range_len.append(len(cov_range))
-        else:
-            cov_range = str(i[1])
-            cov_range_len.append(len(cov_range))
-        if mut =='WT':
-            if not (parser_dict['mutation_calling']['restrict_alignment'] and not default):
-                seq = seq[seq_range[0]:seq_range[1]]
-            mut_list.append({'muts':'WT', 'seq':seq, 'cov':cov_range+'%','ins':[]})
-        else:
-            seq, mut, ins = parse_mut(mut, seq)
-            if mut == '':
-                mut = 'snv'
-            if not (parser_dict['mutation_calling']['restrict_alignment'] and not default):
-                seq = seq[seq_range[0]:seq_range[1]]
-            mut_list.append({'muts':mut, 'seq':seq, 'cov':cov_range+'%', 'ins':ins})
-    visualize(zero_site, ref_lines_sub, mut_list, target, outfile, max(cov_range_len), seq_range[0], seq_range[1])
-
+                cov_range = str(i[1])
+                cov_range_len.append(len(cov_range))
+            if mut =='WT':
+                if not (parser_dict['mutation_calling']['restrict_alignment'] and not default):
+                    seq = seq[seq_range[0]:seq_range[1]]
+                mut_list.append({'muts':'WT', 'seq':seq, 'cov':cov_range+'%','ins':[]})
+            else:
+                seq, mut, ins = parse_mut(mut, seq)
+                if mut == '':
+                    mut = 'snv'
+                if not (parser_dict['mutation_calling']['restrict_alignment'] and not default):
+                    seq = seq[seq_range[0]:seq_range[1]]
+                mut_list.append({'muts':mut, 'seq':seq, 'cov':cov_range+'%', 'ins':ins})
+        visualize(zero_site, ref_lines_sub, mut_list, target, outfile, max(cov_range_len), seq_range[0], seq_range[1])
+    else:
+        log.warning('No sequences above summary threshold %s%%, lower threshold to generate a plot', str(parser_dict['mutation_calling']['summary_threshold']))
+    

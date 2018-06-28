@@ -174,9 +174,8 @@ def parse_restrict_alignment(seq_range, ordered_list):
 def filter_reads(ordered_list, read_cnt, parse_snps, threshold, ref_seq): 
     """ A 'noise' filter. parses through output and finds total occurences of 
     mutations at a particular site. if they are below a user defined threshold 
-    (default of 0.5%, intended to be roughly consistent with illumina miseq 
-    error rate), then they will be filtered out of the read. any matching hits 
-    will then be summed"""
+    (default of 0.25% error rate), then they will be filtered out of the read. 
+    any matching hits will then be summed"""
 
     mut_dict = {}
     filter_muts = []
@@ -293,47 +292,6 @@ def parse_cigar(cigar, start, seq,ref_name, ref_dict):
    
     return(MutOut, frame, seq_tracker)                     
                            
-
-#def parse_sam(bam, out_file, ref_dict, q_cutoff, noise_filter, parse_snps,restrict_alignment, seq_range):
-#    """Loops through bam file parses cigar string against sequence to obtain full
-#    mutation string"""
-#
-#    read_info = {}
-#    N_reads = 0
-#    bamfile=pysam.AlignmentFile(bam, 'rb')
-#    filter_pass_reads = 0
-#    for line in bamfile:
-#        N_reads += 1
-#        if line.cigarstring!=None and line.has_tag('AS')  and line.get_tag('AS') >= q_cutoff and line.seq!=None: 
-#            filter_pass_reads +=1
-#            seq=line.seq       
-#            PAstart = line.reference_start+1      
-#            PAcigar = line.cigarstring
-#            PAend = line.reference_end
-#            refname = line.reference_name        
-#            PAmuts, frame, seq_tracker = parse_cigar(PAcigar, PAstart, seq, refname, ref_dict)
-#            PArange = str(PAstart) + ':' + str(PAend)
-#            concat = '\t'.join([refname,PAmuts,frame,seq_tracker])
-#            if concat in read_info:
-#                read_info[concat]+=1
-#            else:
-#                read_info[concat]=1
-#
-#    bamfile.close()
-#    ordered_out = sorted(read_info.items(), key=lambda x: x[1], reverse=True)
-#    f_out=open(out_file, 'w')
-#    f_out.write('\t'.join(['Ref', 'Mut', 'Frameshift', 'N_mut', 'N_mapped', 'Mut_%', 'Alignment'])+'\n')
-#
-#    if noise_filter>0.0 or not parse_snps:
-#        ordered_out = filter_reads(ordered_out, filter_pass_reads, parse_snps, noise_filter, ref_dict[refname])
-#    if restrict_alignment:
-#        ordered_out=parse_restrict_alignment(seq_range, ordered_out)
-#    for i in range(len(ordered_out)):
-#        out = ordered_out[i][0].split('\t')
-#        f_out.write('\t'.join([out[0], out[1], out[2], str(ordered_out[i][1]), str(filter_pass_reads), "%.2f" % (100.0*ordered_out[i][1]/filter_pass_reads), out[3]])+'\n')
-#    f_out.close()
-#    return
-
 def setup_mut_caller(ref_fasta):
     """Converts fasta to dictionary of names/sequences. Supports multisequence 
     fasta but current pipeline implementation should only ever see single seq 
@@ -350,7 +308,7 @@ def setup_mut_caller(ref_fasta):
     return(ref_dict)
  
 def single_sample_mut_parser(out_dir, q_cutoff, ref_dict, bam, parse_snps, noise_filter,restrict_alignment, seq_range):
-    """just sets up samplename and outfile, passes to parse_sam"""
+    """parses bam file"""
     sample_name = re.sub('.bam', '', os.path.basename(bam))
     out_file = os.path.join(out_dir, sample_name + '.mut.xls')
     #parse_sam(bam, out_file, ref_dict, q_cutoff, noise_filter, parse_snps, restrict_alignment, upstream_restrict, downstream_restrict, N_bases)
