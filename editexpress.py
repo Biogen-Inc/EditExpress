@@ -158,7 +158,6 @@ def get_reference(ref_file):
     amplicon=[]
     target=[]
     sgRNA=[]
-    print(clean3)
     for i in range(y-1):
         if len(primer_indices)==1: #only forward primer
             primer1_parse=clean3[i+1][primer_indices[0]]
